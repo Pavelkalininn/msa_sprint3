@@ -1,0 +1,32 @@
+@startuml
+
+
+participant "Склад" as Goods order 2
+participant "Корзина" as Basket order 3
+participant "Оплата" as Purchase order 4
+participant "Аккаунт" as Account order 5
+participant "Доставка" as Delivery order 6
+participant "Служба доставки" as SideDeliveryServie order 7
+participant "Уведомление" as Notification order 8
+
+
+Goods -> Basket: добавление товаров в корзину
+Goods <- Basket: Проверка наличия товара и резерв
+Goods -> Basket: Нет товара в наличии
+Basket -> Basket: Изменить состав корзины
+Goods <- Basket: Проверка наличия товара и резерв
+Goods -> Purchase: Товар в наличии и зарезервирован
+Goods -> Delivery: Изменить статус доставки на ожидает оплаты
+Purchase -> Account: Запрос привязанной карты
+Purchase <- Account: Нет привязанной карты
+Purchase -> Account: Привязка карты
+Purchase <-  Account: Карта привязана успешно
+Purchase ->  Purchase: Оплата
+Purchase -> Delivery: Успешная оплата
+Delivery -> SideDeliveryServie: Заявка на доставку
+Delivery -> Notification: Запрос на отправку уведомления
+Delivery <- Notification: Уведомление доставлено
+Delivery <- SideDeliveryServie: Передан в доставку
+Delivery <- SideDeliveryServie: Доставлен
+
+@enduml
