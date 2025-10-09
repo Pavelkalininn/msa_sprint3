@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    prometheus-monitored: "true"  # Добавляем лейбл для ServiceMonitor
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        prometheus-monitored: "true"  # Важно для ServiceMonitor!
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.service.targetPort }}"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http  # Добавляем имя порта для ServiceMonitor
+              containerPort: {{ .Values.service.targetPort }}
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ .Values.resources.limits.cpu }}
+          env:
+            - name: ENABLE_FEATURE_X
+              value: "{{ .Values.ENABLE_FEATURE_X }}"
+            - name: LOG_LEVEL
+              value: "{{ .Values.config.logLevel }}"
+          {{- if .Values.probes }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.livenessProbe.path }}
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: {{ .Values.probes.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readinessProbe.path }}
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: {{ .Values.probes.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readinessProbe.failureThreshold }}
+          {{- end }}

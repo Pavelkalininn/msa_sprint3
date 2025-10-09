@@ -1,0 +1,13 @@
+#replicaCount: 3
+
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilization: 80
+  targetMemoryUtilization: 80
+
+ENABLE_FEATURE_X: true
+
+config:
+  logLevel: "INFO"
+
