@@ -1,0 +1,8 @@
+prometheus:
+  url: http://prometheus-operator-kube-p-prometheus.default.svc.cluster.local
+  port: 9090
+
+rules:
+  default: true
+
+logLevel: 4

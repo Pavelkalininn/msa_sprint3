@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-servicemonitor  # Уникальное имя для каждого релиза
+  namespace: default
+  labels:
+    release: prometheus-operator  # Должен совпадать с установленным прометеусом
+spec:
+  endpoints:
+    - port: http  # Имя порта из Service (должно совпадать!)
+      interval: 30s
+      scrapeTimeout: 10s
+      path: /metrics  # Путь где приложение отдает метрики
+  namespaceSelector:
+    matchNames:
+      - default  # Namespace где находится твое приложение
+  selector:
+    matchLabels:
+      prometheus-monitored: "true"

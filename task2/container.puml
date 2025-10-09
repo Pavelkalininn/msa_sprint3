@@ -1,0 +1,74 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "User", "Взаимодействие с фронтендом")
+
+System_Boundary(NovaMarket, "NovaMarket system") {
+
+Container(Nginx, "Маршрутизатор, балансировщик нагрузки", "Nginx") {
+  Container(Frontend, "TypeScript, React статика" )
+}
+Rel(user, Nginx, "Использует", "RestAPI")
+
+Container(History, "History API Composition", "JavaScript", "Формирует композиционный ответ от нескольких ендпоинтов")
+
+Rel(Nginx, History, "Использует", "RestAPI")
+
+Container(Goods, "Goods microservice", "FastAPI", "Приложение для отображения товаров и их наличия")
+Container(Reviews, "Reviews microservice", "FastAPI", "Приложение для отображения отзывов о товаре")
+Container(Basket, "Basket microservice", "FastAPI", "Приложение для работы с корзиной")
+Container(Delivery, "Delivery microservice", "FastAPI", "Приложение для работы с доставкой")
+Container(SideDeliveryServie, "Side delivery service", "Стороннее приложение доставки")
+Container(Purchase, "Purchase microservice", "FastAPI", "Приложение для работы с оплатой")
+Container(Account, "Account microservice", "FastAPI", "Приложение для работы с аккаунтом пользователя")
+Container(Notification, "Notification microservice", "FastAPI", "Приложение для работы с уведомлениями")
+
+ComponentQueue(QueueGoodsToBasket, Топик событий добавления/удаления товара в/из корзины, Container: Apache Kafka)
+Rel(Goods, QueueGoodsToBasket, "Публикует", "Kafka")
+Rel(QueueGoodsToBasket, Basket, "Потребляет", "Kafka")
+
+ComponentQueue(QueueGoodsReserve, Топик событий резервирования товара на складе, Container: Apache Kafka)
+Rel(Basket, QueueGoodsReserve, "Публикует", "Kafka")
+Rel(QueueGoodsReserve, Goods, "Потребляет", "Kafka")
+Rel(Goods, QueueGoodsReserve, "Публикует", "Kafka")
+Rel(QueueGoodsReserve, Basket, "Потребляет", "Kafka")
+Rel(QueueGoodsReserve, Delivery, "Потребляет", "Kafka")
+Rel(QueueGoodsReserve, Purchase, "Потребляет", "Kafka")
+
+ComponentQueue(QueueCardSave, Топик событий сохранения карты, Container: Apache Kafka)
+Rel(Purchase, QueueCardSave, "Публикует", "Kafka")
+Rel(QueueCardSave, Account, "Потребляет", "Kafka")
+
+ComponentQueue(QueueCardFetch, Топик событий запроса карты привязанной к аккаунту, Container: Apache Kafka)
+Rel(QueueCardFetch, Purchase, "Потребляет", "Kafka")
+Rel(Account, QueueCardFetch, "Публикует", "Kafka")
+
+ComponentQueue(QueuePurchaseResult, Топик результата оплаты, Container: Apache Kafka)
+Rel(Purchase, QueuePurchaseResult, "Публикует", "Kafka")
+Rel(QueuePurchaseResult, Delivery, "Потребляет", "Kafka")
+Rel(QueuePurchaseResult, Goods, "Потребляет", "Kafka")
+Rel(QueuePurchaseResult, Notification, "Потребляет", "Kafka")
+
+ComponentQueue(QueueSideDeliveryServie, Топик событий состояния доставки, Container: Apache Kafka)
+Rel(SideDeliveryServie, QueueSideDeliveryServie, "Потребляет", "Kafka")
+Rel(QueueSideDeliveryServie, Delivery, "Публикует", "Kafka")
+}
+
+Rel(Nginx, Notification, "Использует")
+Rel(Nginx, Account, "Использует")
+Rel(Nginx, Purchase, "Использует")
+Rel(Nginx, SideDeliveryServie, "Использует")
+Rel(Nginx, Delivery, "Использует")
+Rel(Nginx, Basket, "Использует")
+Rel(Nginx, Reviews, "Использует")
+Rel(Nginx, Goods, "Использует")
+
+Rel(History, Basket, "Использует", "gRPC")
+Rel(History, Account, "Использует", "gRPC")
+Rel(History, Goods, "Использует", "gRPC")
+Rel(History, Delivery, "Использует", "gRPC")
+Rel(History, Purchase, "Использует", "gRPC")
+Rel(History, Reviews, "Отправляет", "Kafka")
+@enduml

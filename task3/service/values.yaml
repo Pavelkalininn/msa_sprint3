@@ -1,0 +1,53 @@
+replicaCount: 1
+
+image:
+  name: ghcr.io/yandex-practicum/scaletestapp
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilization: 80
+  targetMemoryUtilization: 80
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# Добавляем probes в values
+probes:
+  livenessProbe:
+    path: /
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Конфиги приложения
+config:
+  logLevel: "INFO"
+
+# Prometheus настройки
+prometheus:
+  enabled: true
+  url: "http://prometheus-operated:9090"
+
+# Feature flags
+ENABLE_FEATURE_X: true
